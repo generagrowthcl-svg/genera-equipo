@@ -159,20 +159,77 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .btn-wa:hover{background:rgba(37,211,102,.22)}
 @media(max-width:600px){.btn span{display:none}}
 
+/* ===== MOBILE BOTTOM NAV ===== */
+.mob-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:var(--bg2);border-top:1px solid var(--b1);
+  padding:6px 8px max(10px,env(safe-area-inset-bottom,10px));
+  grid-template-columns:1fr 1fr 56px 1fr 1fr;
+  align-items:center;justify-items:center;
+  box-shadow:0 -4px 20px rgba(0,0,0,.3);
+}
+.mob-nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;
+  background:none;border:none;color:var(--text3);cursor:pointer;
+  font-size:10px;font-weight:600;padding:4px 2px;
+  transition:color var(--tr);font-family:'DM Sans',sans-serif;line-height:1;
+}
+.mob-nav-btn.on{color:var(--pri)}
+.mob-nav-ic{font-size:21px;line-height:1;margin-bottom:1px}
+.mob-nav-new{
+  background:var(--pri);border-radius:50%;width:52px;height:52px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;color:white;border:none;cursor:pointer;
+  box-shadow:0 4px 16px rgba(224,75,15,.5);margin-top:-18px;
+  transition:all var(--tr);flex-shrink:0;
+}
+.mob-nav-new:active{background:var(--pri-dk);transform:scale(.94)}
+
 /* ===== MOBILE BOARD ===== */
 @media(max-width:720px){
-  .board-scroll{padding:8px 12px 16px;overflow-x:hidden}
-  .bcols{flex-direction:column;min-height:unset;gap:8px}
+  .mob-nav{display:grid}
+  .page{padding-bottom:88px}
+  .sbar{display:none}
+  /* Board layout */
+  .board-scroll{padding:8px 10px 12px;overflow-x:hidden}
+  .bcols{flex-direction:column;min-height:unset;gap:10px}
   .bcol{width:100%;min-width:unset}
-  .tc-sr{opacity:1}
-  .tc-sr .qsd{width:14px;height:14px}
+  /* Cards */
+  .tc{padding:13px 14px}
+  .tc-t{font-size:15px}
+  .tc-d{font-size:13px}
+  .ctag{font-size:11px;padding:3px 8px}
+  .tc-sr{opacity:1;margin-top:10px;padding-top:9px}
+  .tc-sr .qsd{width:16px;height:16px}
+  /* Board header */
   .bh{padding:12px 14px 10px}
   .stats{gap:6px;margin-bottom:10px}
   .sc{padding:8px 10px}
-  .sc-val{font-size:18px}
+  .sc-val{font-size:19px}
+  .sc-label{font-size:9px}
   .personal-row{margin-bottom:8px}
-  .fb{gap:6px}
-  .sb{min-width:0;flex:1}
+  .pr-greet{font-size:15px}
+  .pr-date{font-size:11px}
+  .my-stat{padding:6px 10px;min-width:52px}
+  .my-stat .n{font-size:17px}
+  .my-stat .l{font-size:9px}
+  .view-toggle{margin-bottom:10px}
+  .vt-btn{padding:6px 16px;font-size:13px}
+  /* Filters */
+  .fb{flex-wrap:wrap;gap:7px}
+  .sb{min-width:0;flex:1 1 100%}
+  .fs{flex:1 1 calc(50% - 4px)}
+  /* Topbar */
+  .topbar{padding:8px 12px}
+  .pt{font-size:15px}
+  #theme-btn,#clear-f{display:none!important}
+  /* Column headers */
+  .ch{padding:10px 12px;margin-bottom:10px}
+  .cname{font-size:13px}
+  /* Clients & Team grids */
+  .cgrid{grid-template-columns:1fr 1fr;padding:12px;gap:10px}
+  .cc-v4{padding:14px}
+  .cc-v4-nm{font-size:13px}
 }
 
 /* ===== iOS INSTALL BANNER ===== */
@@ -497,6 +554,24 @@ input[type="color"].ci{width:30px;height:30px;border:none;background:none;cursor
     <span style="margin-left:auto;color:var(--text3)" id="last-sv"></span>
   </footer>
 </main>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mob-nav" id="mob-nav" style="display:none">
+  <button class="mob-nav-btn" id="mnav-board" onclick="navTo('board')">
+    <span class="mob-nav-ic">⬛</span>Tablero
+  </button>
+  <button class="mob-nav-btn" id="mnav-clients" onclick="navTo('clients')">
+    <span class="mob-nav-ic">🏢</span>Clientes
+  </button>
+  <button class="mob-nav-new" onclick="openModal(null,'')">+</button>
+  <button class="mob-nav-btn" id="mnav-team" onclick="navTo('team')">
+    <span class="mob-nav-ic">👥</span>Equipo
+  </button>
+  <button class="mob-nav-btn" onclick="showBriefing()">
+    <span class="mob-nav-ic" id="mnav-emoji">🤑</span>Yo
+  </button>
+</nav>
+
 <div id="tw"></div>
 
 <!-- iOS INSTALL BANNER -->
@@ -757,6 +832,7 @@ function login(uid){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('main').style.display='flex';
   document.getElementById('sidebar').style.display='flex';
+  const mn=document.getElementById('mob-nav');if(mn){mn.style.display='';const me=document.getElementById('mnav-emoji');if(me)me.textContent=user.emoji;document.getElementById('mnav-board').classList.add('on');}
   updateUserUI();populateSelects();renderSB();renderBoard();checkDailyBriefing();
 }
 function logout(){
@@ -765,6 +841,7 @@ function logout(){
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('main').style.display='none';
   document.getElementById('sidebar').style.display='none';
+  document.getElementById('mob-nav').style.display='none';
   document.getElementById('briefing-modal').classList.remove('open');
 }
 function updateUserUI(){
@@ -933,6 +1010,7 @@ function navTo(p,cl,ow){
   ['board','clients','team'].forEach(x=>{
     document.getElementById('page-'+x).classList.toggle('active',x===p);
     document.getElementById('nav-'+x).classList.toggle('on',x===p);
+    const mb=document.getElementById('mnav-'+x);if(mb)mb.classList.toggle('on',x===p);
   });
   document.getElementById('pg-title').textContent={board:'Tablero',clients:'Clientes',team:'Equipo'}[p];
   if(cl!==undefined){filters.client=cl||'';filters.owner=ow||'';filters.search='';document.getElementById('search').value='';}
