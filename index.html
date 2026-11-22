@@ -1,5 +1,12 @@
 <title>Genera · Equipo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#E04B0F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Genera">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
@@ -609,7 +616,7 @@ let clientsExt=[]; // localStorage extended data for all clients
 let cfEditId=null; // current client being edited
 let cfSelColor='#E05252';
 let detailClientId=null;
-let db=null,phonesCache={};
+let db=null,phonesCache={},callmebotCache={};
 
 /* ===== CLIENT HELPERS ===== */
 function getAllClients(){
@@ -628,6 +635,7 @@ async function writeClient(client){if(!db)return;try{await db.doc('clients/'+cli
 async function deleteClientDb(id){if(!db)return;try{await db.doc('clients/'+id).delete();}catch{}}
 function loadPhones(){return{...phonesCache};}
 async function savePhonesDb(phones){phonesCache={...phones};if(!db)return;try{await db.doc('config/phones').set(phones);}catch{}}
+async function saveCallmebotDb(keys){callmebotCache={...keys};if(!db)return;try{await db.doc('config/callmebot').set(keys);}catch{}}
 function updateSaved(){const e=document.getElementById('last-sv');if(e)e.textContent='Guardado '+new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});}
 /* ===== DB INIT ===== */
 /* REEMPLAZA ESTOS VALORES con tu firebaseConfig de Firebase Console */
@@ -652,6 +660,7 @@ function initDB(){
   db.collection('tasks').onSnapshot(snap=>{tasks=snap.docs.filter(d=>d.exists).map(d=>({...d.data()}));if(!t0){t0=true;chkConn();}if(currentUser)renderAll();},err=>console.error('tasks',err));
   db.collection('clients').onSnapshot(snap=>{clientsExt=snap.docs.filter(d=>d.exists).map(d=>({...d.data()}));if(!c0){c0=true;chkConn();}if(currentUser){renderAll();populateSelects();renderSB();}},err=>console.error('clients',err));
   db.doc('config/phones').onSnapshot(snap=>{phonesCache=snap.exists?({...snap.data()}):{};},err=>console.error('phones',err));
+  db.doc('config/callmebot').onSnapshot(snap=>{callmebotCache=snap.exists?({...snap.data()}):{};},err=>console.error('callmebot',err));
 }
 
 /* ===== DATES ===== */
@@ -799,20 +808,28 @@ function openPhoneModal(ownerId,taskId){
   _pendingNotifyTask={ownerId,taskId};
   const fields=document.getElementById('pm-fields');
   const phones=loadPhones();
-  fields.innerHTML=TEAM.map(m=>`
-    <div class="fr" style="align-items:center">
-      <label class="fl" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text)">${m.emoji} ${esc(m.name)}</label>
-      <input class="fi" id="pm-${m.id}" type="tel" placeholder="56912345678" value="${esc(phones[m.id]||'')}">
-    </div>`).join('');
+  const keys=callmebotCache||{};
+  fields.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:4px">📲 Número WhatsApp (con código de país)</div>`+TEAM.map(m=>`
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:18px;flex-shrink:0">${m.emoji}</span>
+      <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <input class="fi" id="pm-${m.id}" type="tel" placeholder="56912345678" value="${esc(phones[m.id]||'')}" style="font-size:12px">
+        <input class="fi" id="cb-${m.id}" type="text" placeholder="Callmebot apikey" value="${esc(keys[m.id]||'')}" style="font-size:12px">
+      </div>
+    </div>`).join('')+`<div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">🔑 <b>Callmebot apikey:</b> cada persona escribe a <b>+34 644 72 72 00</b> en WhatsApp el mensaje <i>"I allow callmebot to send me messages"</i> y recibe su apikey.</div>`;
   document.getElementById('phone-modal-bg').classList.add('open');
 }
 function closePhoneModal(){document.getElementById('phone-modal-bg').classList.remove('open');}
 async function savePhones(){
   const phones=loadPhones();
-  TEAM.forEach(m=>{const v=document.getElementById('pm-'+m.id)?.value.trim();if(v)phones[m.id]=v.replace(/\D/g,'');});
-  await savePhonesDb(phones);
+  const keys={...callmebotCache};
+  TEAM.forEach(m=>{
+    const v=document.getElementById('pm-'+m.id)?.value.trim();if(v)phones[m.id]=v.replace(/\D/g,'');
+    const k=document.getElementById('cb-'+m.id)?.value.trim();if(k)keys[m.id]=k;
+  });
+  await Promise.all([savePhonesDb(phones),saveCallmebotDb(keys)]);
   closePhoneModal();
-  toast('Números guardados.','success');
+  toast('Configuración guardada.','success');
   if(_pendingNotifyTask){const{ownerId,taskId}=_pendingNotifyTask;_pendingNotifyTask=null;setTimeout(()=>notifyWA(taskId),200);}
 }
 
@@ -1256,4 +1273,5 @@ initTheme();
 buildLogin();
 restoreSession();
 initDB();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
 </script>
