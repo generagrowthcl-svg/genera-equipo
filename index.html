@@ -163,16 +163,17 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .mob-nav{
   display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
   background:var(--bg2);border-top:1px solid var(--b1);
-  padding:6px 8px max(10px,env(safe-area-inset-bottom,10px));
-  grid-template-columns:1fr 1fr 56px 1fr 1fr;
-  align-items:center;justify-items:center;
+  padding:10px 8px calc(env(safe-area-inset-bottom,28px) + 10px);
+  grid-template-columns:1fr 1fr 60px 1fr 1fr;
+  align-items:flex-start;justify-items:center;
   box-shadow:0 -4px 20px rgba(0,0,0,.3);
 }
 .mob-nav-btn{
-  display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;
+  display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;
   background:none;border:none;color:var(--text3);cursor:pointer;
-  font-size:10px;font-weight:600;padding:4px 2px;
+  font-size:10px;font-weight:600;padding:6px 2px 4px;
   transition:color var(--tr);font-family:'DM Sans',sans-serif;line-height:1;
+  min-height:44px;
 }
 .mob-nav-btn.on{color:var(--pri)}
 .mob-nav-ic{font-size:21px;line-height:1;margin-bottom:1px}
@@ -188,7 +189,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 /* ===== MOBILE BOARD ===== */
 @media(max-width:720px){
   .mob-nav{display:grid}
-  .page{padding-bottom:88px}
+  .page{padding-bottom:calc(env(safe-area-inset-bottom,28px) + 88px)}
   .sbar{display:none}
   /* Board layout */
   .board-scroll{padding:8px 10px 12px;overflow-x:hidden}
