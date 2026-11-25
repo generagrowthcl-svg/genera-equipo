@@ -223,7 +223,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   .sb{min-width:0;flex:1 1 100%}
   .fs{flex:1 1 calc(50% - 4px)}
   /* Topbar */
-  .topbar{padding:8px 12px}
+  .topbar{padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px}
   .pt{font-size:15px}
   #theme-btn,#clear-f{display:none!important}
   /* Column headers */
