@@ -747,7 +747,21 @@ async function subscribePush(uid){
     if(perm!=='granted')return;
     const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8(VAPID_PUBLIC_KEY)});
     await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription:sub.toJSON(),userId:uid})});
+    toast('Notificaciones activadas ✓','success');
+    document.getElementById('push-banner')?.remove();
   }catch(e){console.error('Push:',e);}
+}
+function checkPushPrompt(uid){
+  if(!('PushManager'in window))return;
+  if(Notification.permission==='granted'){subscribePush(uid);return;}
+  if(Notification.permission==='denied')return;
+  let dismissed;try{dismissed=localStorage.getItem('ge-push-dismissed');}catch{}
+  if(dismissed)return;
+  const b=document.createElement('div');
+  b.id='push-banner';
+  b.style.cssText='position:fixed;bottom:calc(env(safe-area-inset-bottom,28px)+80px);left:12px;right:12px;background:#1A1008;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;z-index:300;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);';
+  b.innerHTML=`<span style="font-size:22px">🔔</span><div style="flex:1;font-size:13px;color:#EDE5DF;line-height:1.4"><strong>Activa las notificaciones</strong><br><span style="color:#9A8A80">Recibe avisos de tareas atrasadas</span></div><button onclick="subscribePush('${uid}')" style="background:#E04B0F;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Activar</button><button onclick="this.parentElement.remove();try{localStorage.setItem('ge-push-dismissed','1');}catch{}" style="background:none;border:none;color:#5A4E48;font-size:18px;cursor:pointer;padding:4px">✕</button>`;
+  document.body.appendChild(b);
 }
 
 /* ===== CLIENT HELPERS ===== */
@@ -850,7 +864,7 @@ function login(uid){
   document.getElementById('sidebar').style.display='flex';
   const mn=document.getElementById('mob-nav');if(mn){mn.style.display='';const me=document.getElementById('mnav-emoji');if(me)me.textContent=user.emoji;document.getElementById('mnav-board').classList.add('on');}
   updateUserUI();populateSelects();renderSB();renderBoard();checkDailyBriefing();
-  setTimeout(()=>subscribePush(uid),2000);
+  setTimeout(()=>checkPushPrompt(uid),1500);
 }
 function logout(){
   currentUser=null;
