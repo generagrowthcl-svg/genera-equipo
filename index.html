@@ -736,6 +736,19 @@ let cfEditId=null; // current client being edited
 let cfSelColor='#E05252';
 let detailClientId=null;
 let db=null,phonesCache={},callmebotCache={};
+const VAPID_PUBLIC_KEY='BKnzkAvpkLCtF-nV8TLs-fS7VyvKxMOp46kETeaE0V4Bj_RqOs2nqb3PGXqUK9E9ovVWNvaCQER8w5MO9pN4YO8';
+function urlB64ToUint8(b){const p='='.repeat((4-b.length%4)%4);const s=(b+p).replace(/-/g,'+').replace(/_/g,'/');const r=atob(s);const o=new Uint8Array(r.length);for(let i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o;}
+async function subscribePush(uid){
+  if(!('serviceWorker'in navigator)||!('PushManager'in window))return;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    let perm=Notification.permission;
+    if(perm==='default')perm=await Notification.requestPermission();
+    if(perm!=='granted')return;
+    const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8(VAPID_PUBLIC_KEY)});
+    await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription:sub.toJSON(),userId:uid})});
+  }catch(e){console.error('Push:',e);}
+}
 
 /* ===== CLIENT HELPERS ===== */
 function getAllClients(){
@@ -837,6 +850,7 @@ function login(uid){
   document.getElementById('sidebar').style.display='flex';
   const mn=document.getElementById('mob-nav');if(mn){mn.style.display='';const me=document.getElementById('mnav-emoji');if(me)me.textContent=user.emoji;document.getElementById('mnav-board').classList.add('on');}
   updateUserUI();populateSelects();renderSB();renderBoard();checkDailyBriefing();
+  setTimeout(()=>subscribePush(uid),2000);
 }
 function logout(){
   currentUser=null;
